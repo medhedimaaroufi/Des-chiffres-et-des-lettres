@@ -1,11 +1,22 @@
-#include <stdio.h>
+////// INCLUSION DES BIBLIOTHEQUES //////
+#include<stdio.h>
 #include<string.h>
+#include<time.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include <conio.h>
+
+
+////// DECLARATION DES CONSTANTES  //////
+#define delay 30
+#define vowel "aeiouy"
+#define consonant "bcdfghjklmnpqrstvwxz"
 
 typedef struct index_char
 {
     char firstChar;
     long int position;
-};
+} index_char;
 
 ////// FONCTION POUR CREER LE FICHIER INDEX //////
 void CreateIndex(char *path_dict){
@@ -41,6 +52,7 @@ void VerifyIndex(char *path_dict , char *path_index){
         printf("mot: %s\n", buffer);
     }
 }
+
 ////// FONCTION POUR CHERCHER UNE MOT //////
 int FindWord(char *path_dict, char *path_index, char *word){
     FILE *dict=fopen(path_dict, "r");
@@ -60,14 +72,43 @@ int FindWord(char *path_dict, char *path_index, char *word){
     return 0;
 }
 
-int main() {
-/*     CreateIndex("dictionnaire.txt");
-    VerifyIndex("dictionnaire.txt", "index.txt"); 
-    char ch[30]="zabres";
-    printf("result = %d\n",FindWord("dictionnaire.txt", "index.txt", ch));*/
+////// FONCTION POUR GENERER 10 LETTRES ALEATOIREMENT AVEC LE NBRE DE VOYELLES CHOISI //////
+char *Generate10Char(int nb_vowel){
+    char *word=malloc(11*sizeof(char));
+    int i=0,j=0;
+    if(word!=NULL){
+        srand(time(NULL));
+        while (j<10)
+        {
+            if (i<nb_vowel){
+                word[j]=vowel[rand()%6];
+                i++;
+                j++;
+            }
+            else{
+                word[j]=consonant[rand()%20];
+                j++;
+            }
+        }
+        word[10]='\0';
+        return word;
+    }
+}
 
-    
-
+////// FONCTION POUR COMPTER LE TEMPS //////
+int timer() {
+     int i;
+    for (i = delay; i >= 0; --i) {
+        printf("\rTime remaining: %d seconds", i);
+        fflush(stdout);
+        sleep(1);
+    }
+    printf("\nCountdown finished!\n");
     return 0;
 }
+
+
+
+
+
 
