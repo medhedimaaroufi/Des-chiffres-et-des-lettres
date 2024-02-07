@@ -9,6 +9,8 @@
 #define delay 3
 #define vowel "aeiouy"
 #define consonant "bcdfghjklmnpqrstvwxz"
+#define path_dict "dictionnaire.txt"
+#define path_index "index.dat"
 
 ////// DECLARATION DES STRUCTURES //////
 typedef struct index_char
@@ -24,7 +26,7 @@ typedef struct player{
 }player;  //STRUCTURE POUR LES JOUEURS
 
 ////// FONCTION POUR CREER LE FICHIER INDEX //////
-void CreateIndex(char *path_dict, char *path_index){
+void CreateIndex(){
     printf("inCreateIndex");
     FILE *dict=fopen(path_dict,"r");
     FILE *index=fopen(path_index,"wb");
@@ -46,7 +48,7 @@ void CreateIndex(char *path_dict, char *path_index){
 }
 
 ////// FONCTION POUR VERIFICATION DE PREMIER MOT DE CHAQUE LETTRE //////
-void VerifyIndex(char *path_dict , char *path_index){
+void VerifyIndex(){
     FILE *dict=fopen(path_dict, "r");
     FILE *index=fopen(path_index, "rb");
     struct index_char ind_char;
@@ -60,7 +62,7 @@ void VerifyIndex(char *path_dict , char *path_index){
 }
 
 ////// FONCTION POUR CHERCHER UNE MOT //////
-int FindWord(char *path_dict, char *path_index, char *word){
+int FindWord(char *word){
     FILE *dict=fopen(path_dict, "r");
     FILE *index=fopen(path_index, "rb");
     struct index_char ind_char;
@@ -134,12 +136,12 @@ int Input(struct player *player,char *control){
 }
 
 //////  FONCTION POUR CALCULER LE SCORE //////
-void Score(struct player *player1,struct player *player2,char *path_dict, char *path_index){
+void Score(struct player *player1,struct player *player2){
     int longWord1,longWord2,FindWord1,FindWord2;
     printf("inScore");
 
-    FindWord1= FindWord(path_dict,path_index,player1->word); //VERIFIER L'EXISTANCE DE WORD1
-    FindWord2= FindWord(path_dict,path_index,player2->word); //VERIFIER L'EXISTANCE DE WORD2
+    FindWord1= FindWord(player1->word); //VERIFIER L'EXISTANCE DE WORD1
+    FindWord2= FindWord(player2->word); //VERIFIER L'EXISTANCE DE WORD2
 
     longWord1=strlen(player1->word);
     longWord2=strlen(player2->word);
@@ -172,7 +174,7 @@ void EnterName(struct player *player){
     scanf("%s",player->name);
 }
 
-void Manche(struct player *player1,struct player *player2,char *path_dict, char *path_index){
+void Manche(struct player *player1,struct player *player2){
     int nbVowel=0; //NBRE DE VOYELLES CHOISI PAR L'UTILISATEUR
     char *control;  //LA PLUS LONGUE MOT DE DICTIONNAIRE A 15 LETTRES
     EnterName(player1);
@@ -190,7 +192,7 @@ void Manche(struct player *player1,struct player *player2,char *path_dict, char 
     Input(&player1,control); //SAISI DES 10 LETTRES DE JOUEUR 1
     Input(&player2,control);  //SAISI DES 10 LETTRES DE JOUEUR 2
 
-    Score(&player1,&player2,path_dict,path_index); //METTRE A JOUR LE SCORE
+    Score(&player1,&player2); //METTRE A JOUR LE SCORE
 
     printf("Score Player_1 : %d\n",player1->score);
     printf("Score Player_2 : %d\n",player2->score);
@@ -198,8 +200,6 @@ void Manche(struct player *player1,struct player *player2,char *path_dict, char 
 }
 
 int main(){
-    char path_dict[]="dictionnaire.txt";
-    char path_index[]="index.txt";
     struct player player1={1}; //STRUCTURE POUR LE JOUEUR 1
     struct player player2={2}; //STRUCTURE POUR LE JOUEUR 2
 
