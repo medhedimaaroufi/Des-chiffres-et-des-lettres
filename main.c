@@ -5,22 +5,29 @@
 #include<stdlib.h>
 #include<unistd.h>
 
-
 ////// DECLARATION DES CONSTANTES  //////
 #define delay 3
 #define vowel "aeiouy"
 #define consonant "bcdfghjklmnpqrstvwxz"
 
+////// DECLARATION DES STRUCTURES //////
 typedef struct index_char
 {
     char firstChar;
     long int position;
-} index_char;
+} index_char;  //STRUCTURE POUR L'INDEXATION DE DICTIONNAIRE
+typedef struct player{
+    int id;
+    char name[20];
+    char word[11];
+    int score;
+}player;  //STRUCTURE POUR LES JOUEURS
 
 ////// FONCTION POUR CREER LE FICHIER INDEX //////
-void CreateIndex(char *path_dict){
+void CreateIndex(char *path_dict, char *path_index){
+    printf("inCreateIndex");
     FILE *dict=fopen(path_dict,"r");
-    FILE *index=fopen("index.bin","wb");
+    FILE *index=fopen(path_index,"wb");
     struct index_char ind_char;
     char firstChar=96;
     char buffer[30];
@@ -90,7 +97,7 @@ char *Generate10Char(int nb_vowel){
             }
         }
         word[10]='\0';
-        free(word);return word;
+        return word;
     }
 }
 
@@ -106,80 +113,98 @@ int timer() {
     return 0;
 }
 
+
 ////// FONCTION DE CONTROLE DE SAISI //////
-void Input(char *word,char *control,int player){
+int Input(struct player *player,char *control){
     int i;
+    char *S;
+    printf("Answer %s : ", player->name);
+    scanf("%s",player->word);
 
-    printf("Answer Player_%d : ", player+1);
-    scanf("%s",word);
+    S= strchr(player->word,'\n');
+    if(S!=NULL) *S='\0';
 
-    for (i=0;i< strlen(word);i++){
-        if (strchr(control,word[i])==NULL) return Input(word,control,player);
+    for (i=0;i< strlen(player->word);i++){
+        if (strchr(control,player->word[i])==NULL) {
+            printf("Wrong input\n");
+            return Input(player,control);
+        }
     }
+    return 0;
 }
 
 //////  FONCTION POUR CALCULER LE SCORE //////
-void Score(int *score,char *path_dict, char *path_index, char *word1, char *word2){
+void Score(struct player *player1,struct player *player2,char *path_dict, char *path_index){
     int longWord1,longWord2,FindWord1,FindWord2;
+    printf("inScore");
 
-    FindWord1= FindWord(path_dict,path_index,word1); //VERIFIER L'EXISTANCE DE WORD1
-    FindWord2= FindWord(path_dict,path_index,word2); //VERIFIER L'EXISTANCE DE WORD2
+    FindWord1= FindWord(path_dict,path_index,player1->word); //VERIFIER L'EXISTANCE DE WORD1
+    FindWord2= FindWord(path_dict,path_index,player2->word); //VERIFIER L'EXISTANCE DE WORD2
 
-    longWord1=strlen(word1);
-    longWord2=strlen(word2);
+    longWord1=strlen(player1->word);
+    longWord2=strlen(player2->word);
 
     if(longWord1>longWord2)
         if (FindWord1)
-            *score+=longWord1;
+            player1->score+=longWord1;
         else
-            *(score+1)+=longWord1;
+            player2->score+=longWord1;
     else if(longWord1< longWord2)
         if (FindWord2)
-            *(score+1)+=longWord2;
+            player2->score+=longWord2;
         else
-            *score+=longWord2;
+            player1->score+=longWord2;
     else{
         if (FindWord1 && FindWord2) {
-            *score += longWord1;
-            *(score+1) += longWord1;
+            player1->score += longWord1;
+            player2->score+= longWord1;
         }
         else if (FindWord1 && !FindWord2)
-            *score+=longWord1;
+            player1->score+=longWord1;
         else if (!FindWord1 && FindWord2)
-            *(score+1)+=longWord2;
+            player2->score+=longWord2;
     }
 }
 
+////// ENTRER LE NOM DU JOUEUR //////
+void EnterName(struct player *player){
+    printf("Player_%d name : ",player->id);
+    scanf("%s",player->name);
+}
 
+void Manche(struct player *player1,struct player *player2,char *path_dict, char *path_index){
+    int nbVowel=0; //NBRE DE VOYELLES CHOISI PAR L'UTILISATEUR
+    char *control;  //LA PLUS LONGUE MOT DE DICTIONNAIRE A 15 LETTRES
+    EnterName(player1);
+    EnterName(player2);
 
-
-int main(){
-    char path_dict[]="dictionnaire.txt";
-    char path_index[]="index.bin";
-    char *word1,*word2,control[]="abrez";
-    int nbVowel=0;
-    int player=1;
-    int *score[2];
-
-
-    //CreateIndex(path_dict); //CREATION DU FICHIER INDEX
 
     printf("Number of vowel: "); //SAISI DU NBRE DE VOYELLES
     scanf("%d",&nbVowel);
 
-    //control=Generate10Char(nbVowel); //GENERATION DES 10 LETTRES ALEATOIREMENT
+    control=Generate10Char(nbVowel); //GENERATION DES 10 LETTRES ALEATOIREMENT
     printf("Generated Chars : %s\n", control);
 
     timer();
 
-    Input(word1,control,!player); //SAISI DES 10 LETTRES DE JOUEUR 1
-    Input(word2,control,player);  //SAISI DES 10 LETTRES DE JOUEUR 2
-    printf("hello world\n");
-    Score(score,path_dict,path_index,word1,word2); //CALCUL DU SCORE
+    Input(&player1,control); //SAISI DES 10 LETTRES DE JOUEUR 1
+    Input(&player2,control);  //SAISI DES 10 LETTRES DE JOUEUR 2
 
-    printf("Score Player_1 : %d\n",*score);
-    printf("Score Player_2 : %d\n",*(score+1));
+    Score(&player1,&player2,path_dict,path_index); //METTRE A JOUR LE SCORE
 
+    printf("Score Player_1 : %d\n",player1->score);
+    printf("Score Player_2 : %d\n",player2->score);
+
+}
+
+int main(){
+    char path_dict[]="dictionnaire.txt";
+    char path_index[]="index.txt";
+    struct player player1={1}; //STRUCTURE POUR LE JOUEUR 1
+    struct player player2={2}; //STRUCTURE POUR LE JOUEUR 2
+
+    CreateIndex(path_dict, path_index); //CREATION DU FICHIER INDEX
+    VerifyIndex( path_dict, path_index); //VERIFICATION DU FICHIER INDEX
 
 
     return 0;
