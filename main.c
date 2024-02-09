@@ -28,6 +28,26 @@ typedef struct player{
     char word[11];
 }player;  //STRUCTURE POUR LES JOUEURS
 
+void Hello(){
+    char *HelloWorld ="      _   _      _ _         __        __         _     _\n"
+                      "     | | | | ___| | | ___    \\ \\      / /__  _ __| | __| |\n"
+                      "     | |_| |/ _ \\ | |/ _ \\    \\ \\ /\\ / / _ \\| '__| |/ _` |\n"
+                      "     |  _  |  __/ | | (_) |    \\ V  V / (_) | |  | | (_| |\n"
+                      "     |_| |_|\\___|_|_|\\___/      \\_/\\_/ \\___/|_|  |_|\\__,_|\n";
+
+    for (int i = 0; HelloWorld[i] != '\0'; i++) {
+        putchar(HelloWorld[i]);
+        fflush(stdout);
+        usleep(10 * 1000);
+    }
+
+    putchar('\n');
+    sleep(3);
+    system("clear");
+
+}
+
+
 //////EFFACER LES MOTS DE LONGUEUR SUPERIEURE A 10 //////
 void CleanDict(){
     FILE *dict=fopen(path_dict, "r");
@@ -338,11 +358,15 @@ void GameOver(struct player player1,struct player player2){
     exit(0);
 }
 
+
+
+
 int main(){
     struct player player1={1,0}; //STRUCTURE POUR LE JOUEUR 1
     struct player player2={2,0}; //STRUCTURE POUR LE JOUEUR 2
     system("clear");
     srand(time(NULL));
+    Hello();
     //CleanDict();
     //CreateIndex(path_cleanDict);           //CREATION DU FICHIER INDEX
     //VerifyIndex(path_cleanDict);           //VERIFICATION DU FICHIER INDEX
@@ -355,3 +379,6 @@ int main(){
     GameOver(player1,player2);
     return 0;
 }
+
+
+
