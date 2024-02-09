@@ -5,8 +5,9 @@
 #include<stdlib.h>
 #include<unistd.h>
 
+
 ////// DECLARATION DES CONSTANTES  //////
-#define delay 3
+#define delay 30
 #define vowel "aeiouy"
 #define consonant "bcdfghjklmnpqrstvwxz"
 #define path_dict "dictionnaire.txt"
@@ -28,14 +29,17 @@ typedef struct player{
     char word[11];
 }player;  //STRUCTURE POUR LES JOUEURS
 
+
+////// Bienvenue //////
 void Hello(){
-    char *HelloWorld ="      _   _      _ _         __        __         _     _\n"
+     int i;
+    char *HelloWorld ="\n\n\n\n      _   _      _ _         __        __         _     _\n"
                       "     | | | | ___| | | ___    \\ \\      / /__  _ __| | __| |\n"
                       "     | |_| |/ _ \\ | |/ _ \\    \\ \\ /\\ / / _ \\| '__| |/ _` |\n"
                       "     |  _  |  __/ | | (_) |    \\ V  V / (_) | |  | | (_| |\n"
                       "     |_| |_|\\___|_|_|\\___/      \\_/\\_/ \\___/|_|  |_|\\__,_|\n";
 
-    for (int i = 0; HelloWorld[i] != '\0'; i++) {
+    for ( i = 0; HelloWorld[i] != '\0'; i++) {
         putchar(HelloWorld[i]);
         fflush(stdout);
         usleep(10 * 1000);
@@ -43,7 +47,7 @@ void Hello(){
 
     putchar('\n');
     sleep(3);
-    system("clear");
+    system("cls");
 
 }
 
@@ -155,7 +159,6 @@ int Input(struct player *player,char *control){
 
     S= strchr(player->word,'\n');
     if(S!=NULL) *S='\0';
-
     if(!checkLetters(player->word,control)){
         printf("Wrong word !\n");
         return Input(player,control);
@@ -167,7 +170,7 @@ int Input(struct player *player,char *control){
 int timer() {
     int i;
     for (i = delay; i >= 0; --i) {
-        printf("\rTime remaining: %d seconds", i);
+        printf("\rTime remaining: %d seconds...", i);
         fflush(stdout);
         sleep(1);
     }
@@ -180,17 +183,28 @@ int FindWord(char *word){
     FILE *dict=fopen(path_cleanDict, "r");
     FILE *index=fopen(path_index, "rb");
     struct index_char ind_char;
-    char buffer[30];
-    while(fread (&ind_char, sizeof(struct index_char), 1, index))
-        if (*word==ind_char.firstChar){
+    char buffer[12];
+    
+    
+    while(fread (&ind_char, sizeof(struct index_char), 1, index)){
+	    if (*word==ind_char.firstChar){
             fseek(dict, ind_char.position, SEEK_SET);
             break;
         }
-    while (fgets(buffer, sizeof(buffer), dict) && *word==*buffer){
-        buffer[strchr(buffer, '\n')-buffer]='\0';
-        if (!strcmp(word, buffer))
-            return 1;
     }
+    while (fgets(buffer, sizeof(buffer), dict)){
+        if (*word==*buffer){
+			buffer[strchr(buffer, '\n')-buffer]='\0';
+	        if (!strcmp(word, buffer)){
+	        	fclose(dict);
+	        	fclose(index);
+	            return 1;
+			}	
+		}
+            
+    }
+    fclose(dict);
+    fclose(index);
     return 0;
 }
 
@@ -201,32 +215,50 @@ void Score(struct player *player1,struct player *player2){
     FindWord1= FindWord(player1->word);     //VERIFIER L'EXISTANCE DE WORD1
     FindWord2= FindWord(player2->word);     //VERIFIER L'EXISTANCE DE WORD2
 
-    longWord1=strlen(player1->word);      //LA LONGUEUR DU 1ER MOT
-    longWord2=strlen(player2->word);      //LA LONGUEUR DU 2EME MOT
-
+    longWord1=strlen(player1->word);    //LA LONGUEUR DU 1ER MOT
+    longWord2=strlen(player2->word);    //LA LONGUEUR DU 2EME MOT
     if(longWord1>longWord2)                 //MOT JOUEUR 2 PLUS LONGUE
-        if (FindWord1)                      //JOUEUR 1 GAGNE LA MANCHE
-            player1->score+=longWord1;
+        if (FindWord1){                     //JOUEUR 1 GAGNE LA MANCHE
+            printf("/\\/\\/ This round's winner is %s with %d points \\/\\/\\",player1->name,longWord1);
+            player1->score += longWord1;
+        }
         else{                               //JOUEUR 2 GAGNE LA MANCHE
-            if (FindWord2)
-                player2->score+=longWord1;}
-    else if(longWord1 < longWord2)          //MOTS JOUEUR 2 PLUS LONGUE
-        if (FindWord2)                      //JOUEUR 2 GAGNE LA MANCHE
-            player2->score+=longWord2;
+            if (FindWord2) {
+                printf("/\\/\\/ This round's winner is %s with %d points \\/\\/\\",player2->name,longWord1);
+                player2->score += longWord1;
+            }
+        }
+    else if(longWord1 < longWord2)            //MOTS JOUEUR 2 PLUS LONGUE
+        if (FindWord2) {                      //JOUEUR 2 GAGNE LA MANCHE
+            printf("/\\/\\/ This round's winner is %s with %d points \\/\\/\\",player2->name,longWord2);
+            player2->score += longWord2;
+        }
         else{                               //JOUEUR 1 GAGNE LA MANCHE
-            if (FindWord1)
-                player1->score+=longWord2;}
+            if (FindWord1) {
+                printf("/\\/\\/ This round's winner is %s with %d points \\/\\/\\",player1->name,longWord2);
+                player1->score += longWord2;
+            }
+        }
     else                                    //EGALITE DES MOTS
     {
         if (FindWord1 && FindWord2) {       //EGALITE SCORE DE LA MANCHE
+            printf("/\\/\\/ This round, it's a draw with %d points for each player \\/\\/\\",longWord1);
             player1->score += longWord1;
             player2->score+= longWord1;
         }
-        else if (FindWord1 && !FindWord2)   // JOUEUR 1 GAGNE LA MANCHE
-            player1->score+=longWord1;
-        else if (!FindWord1 && FindWord2)   // JOUEUR 2 GAGNE LA MANCHE
-            player2->score+=longWord2;
+        else if (FindWord1 && !FindWord2) { // JOUEUR 1 GAGNE LA MANCHE
+            printf("/\\/\\/ This round's winner is %s with %d points \\/\\/\\",player1->name,longWord1);
+            player1->score += longWord1;
+        }
+        else if (!FindWord1 && FindWord2) {   // JOUEUR 2 GAGNE LA MANCHE
+            printf("/\\/\\/ This round's winner is %s with %d points \\/\\/\\",player2->name,longWord2);
+            player2->score += longWord2;
+        }
+        else
+            printf("/\\/\\/ This round, it's a draw with 0 point for each player  \\/\\/\\");
+            
     }
+    printf("\n\n");
 }
 
 void centerWord(char *word, char *result) {
@@ -250,10 +282,10 @@ void ShowScore(struct player *player1,struct player *player2){
     centerWord(player1->name,name1);
     centerWord(player2->name,name2);
 
-    printf("\n    +----------------------------------------------------+\n");
-    printf("    | Name   |\t %s  %s        |\n",name1,name2);
-    printf("    | Score  |\t\t%d\t\t  %d\t         |\n",player1->score,player2->score);
-    printf("    +----------------------------------------------------+\n\n");
+    printf("\n        +----------------------------------------------------+\n");
+    printf("        | Name   |\t %s  %s    |\n",name1,name2);
+    printf("        | Score  |\t\t%d\t\t  %d\t     |\n",player1->score,player2->score);
+    printf("        +----------------------------------------------------+\n\n\n");
 }
 
 
@@ -325,27 +357,30 @@ void Manche(struct player *player1,struct player *player2,int round){
     Input(round%2 ? player2 : player1 ,control);              //SAISI DES 10 LETTRES DE JOUEUR 1
     Input(round%2 ? player1 : player2 ,control);              //SAISI DES 10 LETTRES DE JOUEUR 2
 
-    Score(player1,player2);                                         //METTRE A JOUR LE SCORE
 
     printf("\n\n==> Example of long word using these letters: %s\n\n", solution);
 
+    Score(player1,player2);                                         //METTRE A JOUR LE SCORE
     ShowScore(player1,player2);
 
-    sleep(5);
+    sleep(8);
     printf("\033[2J\033[1;1H");
 }
 
-
+////// GAME OVER //////
 void GameOver(struct player player1,struct player player2){
-    const char *message = "  _____          __  __ ______    ______      ________ _____  \n"
-                          " / ____|   /\\   |  \\/  |  ____|  / __ \\ \\    / /  ____|  __ \\ \n"
-                          "| |  __   /  \\  | \\  / | |__    | |  | \\ \\  / /| |__  | |__) |\n"
-                          "| | |_ | / /\\ \\ | |\\/| |  __|   | |  | |\\ \\/ / |  __| |  _  / \n"
-                          "| |__| |/ ____ \\| |  | | |____  | |__| | \\  /  | |____| | \\ \\ \n"
-                          " \\_____/_/    \\_\\_|  |_|______|  \\____/   \\/   |______|_|  \\_\\\n";
+     int i;
+    const char *message = "      _____          __  __ ______    ______      ________ _____  \n"
+                          "     / ____|   /\\   |  \\/  |  ____|  / __ \\ \\    / /  ____|  __ \\ \n"
+                          "    | |  __   /  \\  | \\  / | |__    | |  | \\ \\  / /| |__  | |__) |\n"
+                          "    | | |_ | / /\\ \\ | |\\/| |  __|   | |  | |\\ \\/ / |  __| |  _  / \n"
+                          "    | |__| |/ ____ \\| |  | | |____  | |__| | \\  /  | |____| | \\ \\ \n"
+                          "     \\_____/_/    \\_\\_|  |_|______|  \\____/   \\/   |______|_|  \\_\\\n"
+                          "\n               Copyright 2024 © KTM | All Rights Reserved .\n"
+                          "      Karimen Ben Romdhane | Tasnim Merieh | Mohamed Hedi Maaroufi \n\n";
     const int delay_ms = 15 * 1000;
 
-    for (int i = 0; message[i] != '\0'; i++) {
+    for ( i = 0; message[i] != '\0'; i++) {
         putchar(message[i]);
         fflush(stdout);
         usleep(delay_ms);
@@ -354,6 +389,9 @@ void GameOver(struct player player1,struct player player2){
     putchar('\n');
     sleep(1);
     ShowScore(&player1,&player2);
+
+    player1.score-player2.score ? printf("\t\t\t/\\/\\/\\ The winner is %s /\\/\\/\\\n",player1.score>player2.score ? player1.name : player2.name ) : printf("\t\t\t/\\/\\/\\ DRAW /\\/\\/\\\n");
+
     sleep(5);
     exit(0);
 }
@@ -362,23 +400,32 @@ void GameOver(struct player player1,struct player player2){
 
 
 int main(){
-    struct player player1={1,0}; //STRUCTURE POUR LE JOUEUR 1
-    struct player player2={2,0}; //STRUCTURE POUR LE JOUEUR 2
-    system("clear");
+    struct player player1={1,0,}; //STRUCTURE POUR LE JOUEUR 1
+    struct player player2={2,0,}; //STRUCTURE POUR LE JOUEUR 2
+    int i;
+
+    system("cls");
+
     srand(time(NULL));
+
     Hello();
-    //CleanDict();
-    //CreateIndex(path_cleanDict);           //CREATION DU FICHIER INDEX
+
+    CleanDict();
+    CreateIndex(path_cleanDict);           //CREATION DU FICHIER INDEX
     //VerifyIndex(path_cleanDict);           //VERIFICATION DU FICHIER INDEX
+
     EnterName(&player1);
     EnterName(&player2);
-    system("clear");
-    for ( int i = 0; i < 8; ++i )
-        Manche(&player1,&player2,i); //LANCEMANT DE MANCHE i
-    system("clear");
+
+    system("cls");
+
+    for ( i = 0; i < 8; ++i )
+        Manche(&player1,&player2,i);      //LANCEMANT DE MANCHE i
+
+    system("cls");
+
     GameOver(player1,player2);
     return 0;
 }
-
 
 
