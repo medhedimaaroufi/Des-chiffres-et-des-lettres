@@ -390,7 +390,7 @@ void GameOver(struct player player1,struct player player2){
     sleep(1);
     ShowScore(&player1,&player2);
 
-    player1.score-player2.score ? printf("\t\t\t/\\/\\/\\ The winner is %s /\\/\\/\\\n",player1.score>player2.score ? player1.name : player2.name ) : printf("\t\t\t/\\/\\/\\ DRAW /\\/\\/\\\n");
+    player1.score-player2.score ? printf("\t\t/\\/\\/\\ The winner is %s /\\/\\/\\\n",player1.score>player2.score ? player1.name : player2.name ) : printf("\t\t      /\\/\\/\\ DRAW /\\/\\/\\\n");
 
     sleep(5);
     exit(0);
