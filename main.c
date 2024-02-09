@@ -12,6 +12,7 @@
 #define path_dict "dictionnaire.txt"
 #define path_cleanDict "cleanDict.txt"
 #define path_index "index.dat"
+#define path_ctrl "control.txt"
 
 ////// DECLARATION DES STRUCTURES //////
 typedef struct index_char
@@ -22,9 +23,9 @@ typedef struct index_char
 
 typedef struct player{
     int id;
-    char name[20];
-    char word[11];
     int score;
+    char name[16];
+    char word[11];
 }player;  //STRUCTURE POUR LES JOUEURS
 
 //////EFFACER LES MOTS DE LONGUEUR SUPERIEURE A 10 //////
@@ -33,7 +34,7 @@ void CleanDict(){
     FILE *cleanDict=fopen(path_cleanDict, "w");
     char buffer[17];
     while(fgets(buffer, sizeof(buffer), dict)){
-        if (strlen(buffer)<11)
+        if (strlen(buffer)<12)
             fputs(buffer, cleanDict);
 
     }
@@ -82,37 +83,52 @@ void VerifyIndex(char *path ){
 
 ////// ENTRER LE NOM DU JOUEUR //////
 void EnterName(struct player *player){
-    printf("Player_%d name : ",player->id);
+    printf("--> Player_%d name : ",player->id);
     scanf("%s",player->name);
+    player->name[15] = '\0';
 }
 
 ////// FONCTION POUR GENERER 10 LETTRES ALEATOIREMENT AVEC LE NBRE DE VOYELLES CHOISI //////
-char *Generate10Char(int nb_vowel){
-    char *word=malloc(11*sizeof(char));
+void Generate10Char(int nb_vowel,char *control){
     int i=0,j=0;
-    if(word!=NULL){
-        srand(time(NULL));
-        while (j<10)
-        {
-            if (i<nb_vowel){
-                word[j]=vowel[rand()%6];
-                i++;
-                j++;
-            }
-            else{
-                word[j]=consonant[rand()%20];
-                j++;
-            }
+    while (j<10)
+    {
+        if (i<nb_vowel){
+            control[j]=vowel[rand()%6];
+            i++;
+            j++;
         }
-        word[10]='\0';
-        return word;
+        else{
+            control[j]=consonant[rand()%20];
+            j++;
+        }
     }
+    control[10]='\0';
+    return;
 }
+
+////// VERIFIER SI LES LETTRES CHOISIES SONT PRESENTES //////
+int checkLetters(char *word, char *control ){
+    int i;
+    char *P,S[11];
+
+    strcpy(S,control);
+    for (i=0;i< strlen(word);i++){
+        P=strchr(S,word[i]);
+        if (P==NULL) {
+            return 0;
+        }
+        else{
+            *P=' ';
+        }
+    }
+    return 1;
+}
+
 
 ////// FONCTION DE CONTROLE DE SAISI //////
 int Input(struct player *player,char *control){
-    int i;
-    char *S,*P;
+    char *S;
 
     printf("Answer %s : ", player->name);
     scanf("%s",player->word);
@@ -120,25 +136,12 @@ int Input(struct player *player,char *control){
     S= strchr(player->word,'\n');
     if(S!=NULL) *S='\0';
 
-    S=(char *)malloc(11);
-    strcpy(S,control);
-
-    for (i=0;i< strlen(player->word);i++){
-        P=strchr(S,player->word[i]);
-        if (P==NULL) {
-            printf("Wrong input\n");
-            return Input(player,control);
-        }
-        else{
-            *P=' ';
-        }
+    if(!checkLetters(player->word,control)){
+        printf("Wrong word !\n");
+        return Input(player,control);
     }
-
-    free(S);
-
     return 0;
 }
-
 
 ////// FONCTION POUR COMPTER LE TEMPS //////
 int timer() {
@@ -184,13 +187,15 @@ void Score(struct player *player1,struct player *player2){
     if(longWord1>longWord2)                 //MOT JOUEUR 2 PLUS LONGUE
         if (FindWord1)                      //JOUEUR 1 GAGNE LA MANCHE
             player1->score+=longWord1;
-        else                                //JOUEUR 2 GAGNE LA MANCHE
-            player2->score+=longWord1;
+        else{                               //JOUEUR 2 GAGNE LA MANCHE
+            if (FindWord2)
+                player2->score+=longWord1;}
     else if(longWord1 < longWord2)          //MOTS JOUEUR 2 PLUS LONGUE
         if (FindWord2)                      //JOUEUR 2 GAGNE LA MANCHE
             player2->score+=longWord2;
-        else                                //JOUEUR 1 GAGNE LA MANCHE
-            player1->score+=longWord2;
+        else{                               //JOUEUR 1 GAGNE LA MANCHE
+            if (FindWord1)
+                player1->score+=longWord2;}
     else                                    //EGALITE DES MOTS
     {
         if (FindWord1 && FindWord2) {       //EGALITE SCORE DE LA MANCHE
@@ -204,39 +209,149 @@ void Score(struct player *player1,struct player *player2){
     }
 }
 
+void centerWord(char *word, char *result) {
+    int wordLength;
+
+    int i;
+    strcpy(result, "     ");
+    strcat(result,word);
+    wordLength = strlen(result);
+    for ( i = wordLength; i < 15; i++) {
+        *(result+i) = ' ';
+    }
+
+    result[i] = '\0';
+}
+
+////// AFFICHER SCORE APRES LA MANCHE i //////
+void ShowScore(struct player *player1,struct player *player2){
+    char name1[16],name2[16];
+
+    centerWord(player1->name,name1);
+    centerWord(player2->name,name2);
+
+    printf("\n    +----------------------------------------------------+\n");
+    printf("    | Name   |\t %s  %s        |\n",name1,name2);
+    printf("    | Score  |\t\t%d\t\t  %d\t         |\n",player1->score,player2->score);
+    printf("    +----------------------------------------------------+\n\n");
+}
+
+
+
+int Solver(char *control,char *solution){
+    FILE *Dict = fopen(path_cleanDict, "r");
+    FILE *index = fopen(path_index, "rb");
+    struct index_char ind_char;
+    char buffer[12], buffer_max[12];
+    int max = 0;
+
+    if (Dict == NULL || index == NULL) {
+        printf("Error opening files.\n");
+        return 0;
+    }
+
+    while (fread(&ind_char, sizeof(struct index_char), 1, index)) {
+        if (strchr(control, ind_char.firstChar) != NULL) {
+            fseek(Dict, ind_char.position, SEEK_SET);
+            while (fgets(buffer, sizeof(buffer), Dict) && ind_char.firstChar == *buffer && max < 10) {
+                buffer[strchr(buffer, '\n')-buffer] = '\0';
+                if (checkLetters(buffer, control) && strlen(buffer) > max) {
+                    max = strlen(buffer);
+                    strcpy(buffer_max, buffer);
+                }
+            }
+            if (max == 10) {
+                strcpy(solution, buffer_max);
+                fclose(Dict);
+                fclose(index);
+                return 1;
+            }
+        }
+    }
+    fclose(Dict);
+    fclose(index);
+    if(max){
+        strcpy(solution, buffer_max);
+        return 1;
+    }
+    else {
+        return 0;
+    }
+
+}
+
+
 ////// FONCTION POUR LANCER UNE MANCHE //////
 void Manche(struct player *player1,struct player *player2,int round){
-    int nbVowel=0;                              //NBRE DE VOYELLES CHOISI PAR L'UTILISATEUR
-    char *control;                              //LA PLUS LONGUE MOT DE DICTIONNAIRE A 15 LETTRES
-    EnterName(player1);
-    EnterName(player2);
+    int nbVowel=0,found;                                              //NBRE DE VOYELLES CHOISI PAR L'UTILISATEUR
+    char control[11],solution[11];                                    //LA PLUS LONGUE MOT DE DICTIONNAIRE A 15 LETTRES
 
-    printf("--%s chooses a number of vowels ", round ? player2->name : player1->name );  //SAISI DU NBRE DE VOYELLES
-    scanf("%d",&nbVowel);
 
-    control=Generate10Char(nbVowel);   //GENERATION DES 10 LETTRES ALEATOIREMENT
+
+    printf("---------- ROUND %d ----------\n",round+1);
+    do{
+        printf("<> %s chooses a number of vowels : ", round%2 ? player2->name : player1->name );  //SAISI DU NBRE DE VOYELLES
+        scanf("%d",&nbVowel);
+    }while(nbVowel>10 || nbVowel<2);
+
+    do{
+        Generate10Char(nbVowel,control);                    //GENERATION DES 10 LETTRES ALEATOIREMENT
+        found=Solver(control,solution);                              //SOLVER LE MOT
+    }while(!found);
     printf("Generated Chars : %s\n", control);
 
     timer();
 
-    Input(round ? player2 : player1 ,control);             //SAISI DES 10 LETTRES DE JOUEUR 1
-    Input(round ? player1 : player2 ,control);             //SAISI DES 10 LETTRES DE JOUEUR 2
+    Input(round%2 ? player2 : player1 ,control);              //SAISI DES 10 LETTRES DE JOUEUR 1
+    Input(round%2 ? player1 : player2 ,control);              //SAISI DES 10 LETTRES DE JOUEUR 2
 
-    Score(player1,player2);                    //METTRE A JOUR LE SCORE
+    Score(player1,player2);                                         //METTRE A JOUR LE SCORE
 
-    printf("\nName\t %s %s \n",player1->name,player2->name);
-    printf("Score\t   %d    %d \n",player1->score,player2->score);
+    printf("\n\n==> Example of long word using these letters: %s\n\n", solution);
 
+    ShowScore(player1,player2);
+
+    sleep(5);
+    printf("\033[2J\033[1;1H");
+}
+
+
+void GameOver(struct player player1,struct player player2){
+    const char *message = "  _____          __  __ ______    ______      ________ _____  \n"
+                          " / ____|   /\\   |  \\/  |  ____|  / __ \\ \\    / /  ____|  __ \\ \n"
+                          "| |  __   /  \\  | \\  / | |__    | |  | \\ \\  / /| |__  | |__) |\n"
+                          "| | |_ | / /\\ \\ | |\\/| |  __|   | |  | |\\ \\/ / |  __| |  _  / \n"
+                          "| |__| |/ ____ \\| |  | | |____  | |__| | \\  /  | |____| | \\ \\ \n"
+                          " \\_____/_/    \\_\\_|  |_|______|  \\____/   \\/   |______|_|  \\_\\\n";
+    const int delay_ms = 15 * 1000;
+
+    for (int i = 0; message[i] != '\0'; i++) {
+        putchar(message[i]);
+        fflush(stdout);
+        usleep(delay_ms);
+    }
+
+    putchar('\n');
+    sleep(1);
+    ShowScore(&player1,&player2);
+    sleep(5);
+    exit(0);
 }
 
 int main(){
-    struct player player1={1}; //STRUCTURE POUR LE JOUEUR 1
-    struct player player2={2}; //STRUCTURE POUR LE JOUEUR 2
+    struct player player1={1,0}; //STRUCTURE POUR LE JOUEUR 1
+    struct player player2={2,0}; //STRUCTURE POUR LE JOUEUR 2
+    system("clear");
+    srand(time(NULL));
     //CleanDict();
-    //CreateIndex(path_cleanDict); //CREATION DU FICHIER INDEX
-    //VerifyIndex(path_cleanDict); //VERIFICATION DU FICHIER INDEX
-    Manche(&player1,&player2,0);
-
-
+    //CreateIndex(path_cleanDict);           //CREATION DU FICHIER INDEX
+    //VerifyIndex(path_cleanDict);           //VERIFICATION DU FICHIER INDEX
+    EnterName(&player1);
+    EnterName(&player2);
+    system("clear");
+    for ( int i = 0; i < 8; ++i )
+        Manche(&player1,&player2,i); //LANCEMANT DE MANCHE i
+    system("clear");
+    GameOver(player1,player2);
     return 0;
 }
