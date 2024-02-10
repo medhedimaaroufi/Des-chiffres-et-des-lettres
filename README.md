@@ -12,7 +12,7 @@ Ce projet est une implémentation du célèbre jeu télévisé "Des Chiffres et 
 ## Installation
 1. Clonez ce dépôt sur votre machine locale :
    ```
-   github.com/medhedimaaroufi/Des-chiffres-et-des-lettres
+   git clone github.com/medhedimaaroufi/Des-chiffres-et-des-lettres
    ```
 2. Compilez le code source en utilisant un compilateur C compatible (gcc par exemple) :
    ```
