@@ -377,7 +377,7 @@ void GameOver(struct player player1,struct player player2){
                           "    | |__| |/ ____ \\| |  | | |____  | |__| | \\  /  | |____| | \\ \\ \n"
                           "     \\_____/_/    \\_\\_|  |_|______|  \\____/   \\/   |______|_|  \\_\\\n"
                           "\n               Copyright 2024 © KTM | All Rights Reserved .\n"
-                          "      Karimen Ben Romdhane | Tasnim Merieh | Mohamed Hedi Maaroufi \n\n";
+                          "      Karimen Ben Romdhane | Tasnim Meriah | Mohamed Hedi Maaroufi \n\n";
     const int delay_ms = 15 * 1000;
 
     for ( i = 0; message[i] != '\0'; i++) {
